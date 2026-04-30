@@ -12,14 +12,19 @@
 ### Folder Structure
 
 ```
-raw/           # Immutable source materials — never modify files here
-  sources.md   # User-editable index of URLs/sources; agent may toggle [ ]/[x] to track processed status
-  *.md/pdf/... # Dropped source files for ingestion — never modified by the agent
-wiki/          # LLM-maintained knowledge base — all pages created and updated by the agent
-  index.md     # Master catalog of all wiki pages with summaries
-  log.md       # Append-only chronological record of all operations
-attachments/   # Shared image library — both human and agent may add files here
+raw/             # Source materials — content is immutable
+  sources.md     # User-editable index of URLs/sources; agent may toggle [ ]/[x] to track processed status
+  *.md/pdf/...   # Dropped source files for ingestion — never modified by the agent
+wiki/            # LLM-maintained knowledge base — all pages created and updated by the agent
+  index.md       # Master catalog of all wiki pages with summaries
+  log.md         # Append-only chronological record of all operations
+  NN-section/    # One subdirectory per top-level section of the taxonomy (numeric prefix matches index.md ordering, e.g. 01-foundations/, 09-logging/)
+    *.md         # Concept and entity pages live in their section directory
+  sources/       # Source-summary pages, one per ingested source or cluster
+attachments/     # Shared image library — both human and agent may add files here
 ```
+
+Wikilinks use basename only (`[[page-name]]`), not paths. Obsidian-style vault-wide resolution finds the page wherever in the tree it lives, so basename uniqueness across all of `wiki/` matters but file location does not. New pages go into the directory matching their primary section in the taxonomy; cross-section pages live where they are most logically owned and are linked from elsewhere via `[[wikilinks]]`.
 
 ### Attachments
 
@@ -37,10 +42,10 @@ The `attachments/` directory hosts images (diagrams, screenshots, charts, photos
 
 **Naming:** Use lowercase, hyphen-separated, descriptive filenames that include the topic. Examples: `linux-boot-process.png`, `systemd-unit-hierarchy.svg`, `iptables-chain-flow.jpg`. Avoid generic names like `image1.png` or `screenshot.png`.
 
-**Embedding in wiki pages:** Use a relative path from the wiki page to the attachment, with descriptive alt text:
+**Embedding in wiki pages:** Use a relative path from the wiki page to the attachment, with descriptive alt text. Wiki pages live in `wiki/NN-section/`, so the relative path is `../../attachments/`:
 
 ```markdown
-![Linux boot sequence from BIOS to init](../attachments/linux-boot-process.png)
+![Linux boot sequence from BIOS to init](../../attachments/linux-boot-process.png)
 ```
 
 Always include alt text describing the image content — it is the fallback for accessibility and for agents reading the page later.
