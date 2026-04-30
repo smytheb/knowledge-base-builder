@@ -1,0 +1,12 @@
+# Obsidian
+.obsidian/workspace.json
+.obsidian/workspaces.json
+.obsidian/workspace-mobile.json
+.obsidian/hotkeys.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/
