@@ -2,6 +2,7 @@
 name: explorer
 description: Web-search and curation specialist for the knowledge-base-builder. Given a topic or subtopic, returns a curated list of candidate sources without writing to disk. Used by /research-topic (overview phase) and /subtopic-loop (Step 1).
 tools: WebSearch, WebFetch, Read, Bash
+model: sonnet
 ---
 
 # Explorer subagent

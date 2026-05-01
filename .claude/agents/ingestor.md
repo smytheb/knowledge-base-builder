@@ -2,6 +2,7 @@
 name: ingestor
 description: Single-source ingestion specialist. Given an approved source, fetches it and returns drafts of the wiki page(s) that would be created or updated. Returns text only — does not write to disk. Used by /research-topic (overview phase) and /subtopic-loop (Step 3).
 tools: WebFetch, Read, Bash
+model: sonnet
 ---
 
 # Ingestor subagent
