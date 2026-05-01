@@ -1,1 +1,9 @@
-{}
+{
+  "attachmentFolderPath": "wiki/attachments",
+  "newLinkFormat": "shortest",
+  "useMarkdownLinks": false,
+  "alwaysUpdateLinks": true,
+  "userIgnoreFilters": ["raw/", ".claude/"],
+  "showLineNumber": true,
+  "showFrontmatter": true
+}
