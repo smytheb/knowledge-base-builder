@@ -52,3 +52,17 @@ The updated Topic block should follow this shape:
 After saving, say: *"Topic is set. Run `/research-topic` now to fetch an overview and generate the master subtopic plan?"*
 
 Do **not** chain into `/research-topic` automatically. Wait for explicit confirmation.
+
+## Offer a recurring lint routine (optional)
+
+After the next-step offer, add this one-line follow-up prompt:
+
+> *"Optional: want me to `/schedule` a monthly remote agent that lints the wiki for stale claims, orphan pages, and broken `[[wikilinks]]`, then opens a PR with proposed fixes? Requires the wiki to be pushed to a GitHub remote — scheduled agents run in a remote sandbox and can't see purely local files. Skip if you're keeping this wiki local-only."*
+
+Decision flow:
+
+- **User says yes and the repo has a GitHub remote** (`git remote -v` shows one): invoke `/schedule` with a monthly cadence and a routine that clones the repo, runs the wiki Lint operation (per CLAUDE.md), and opens a PR if it finds anything actionable. Confirm the cadence with the user before creating the routine.
+- **User says yes but no GitHub remote exists**: explain the constraint, suggest pushing to a private GitHub repo first, and offer to revisit `/schedule` later. Do not create a routine that has no way to access the wiki.
+- **User says no or skip**: move on. Do not bring it up again unless the user asks.
+
+Do not create the routine silently — the user should see the cadence and the routine action before it's registered to their account.
