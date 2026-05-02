@@ -13,7 +13,6 @@
     "  Add the domains your topic relies on (canonical docs, reference sites, Wikipedia, etc.).",
     "  Anything not on this list will still prompt — that prompt has a 'always allow this domain' option,",
     "  which appends to settings.local.json automatically. Your trusted-domain list grows naturally over time.",
-    "- Bash(git mv *): lets the agent rename pages without re-prompting (used during lint/refactor).",
     "",
     "If you set CLAUDE.md > Safety & Limits > Domain access > Allowlist to non-empty,",
     "keep this WebFetch list aligned — the policy lives in CLAUDE.md, the prompts are silenced here."
@@ -21,7 +20,6 @@
   "permissions": {
     "allow": [
       "WebSearch",
-      "Bash(git mv *)",
       "WebFetch(domain:en.wikipedia.org)",
       "WebFetch(domain:github.com)"
     ]

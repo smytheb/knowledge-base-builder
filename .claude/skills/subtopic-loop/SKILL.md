@@ -1,6 +1,6 @@
 ---
 name: subtopic-loop
-description: Run the full research loop for a single subtopic — explore, source-approve, ingest (drafts only), structure-approve, write, lint, commit-prep. Standalone runnable; also invoked by /research-topic.
+description: Run the full research loop for a single subtopic — explore, source-approve, ingest (drafts only), structure-approve, write, lint, wrap-up. Standalone runnable; also invoked by /research-topic.
 ---
 
 # /subtopic-loop — Per-subtopic research
@@ -92,9 +92,11 @@ Scan the new and changed pages for:
 
 Auto-fix mechanical issues (incomplete frontmatter, obvious wikilink target typos where the intended target is unambiguous). Surface judgment calls (contradictions, orphans, missing cross-references) for the user.
 
-## Step 7 — Commit prep
+## Step 7 — Wrap-up
 
-Run `git status` and `git diff --stat` (via Bash). Propose a commit message in this form:
+First check whether the project is under git: test for a `.git/` directory at the project root (via Bash `test -d .git`).
+
+**If git is present** — run `git status` and `git diff --stat`. Print the staged-changes summary plus a proposed commit message in this form:
 
 ```
 subtopic(<name>): <short summary>
@@ -104,9 +106,18 @@ Pages updated: <list>
 Sources ingested: <count>
 ```
 
-Print the proposed message and the staged-changes summary. **Do not run `git commit`.** The user runs the commit themselves.
+**Do not run `git commit`.** The user runs the commit themselves.
 
-If invoked by `/research-topic`, also return a structured outcome (subtopic name + completed/skipped/aborted + page counts) so the master-file checkbox can be flipped.
+**If git is not present** (e.g. the repo was downloaded as a ZIP) — skip the git commands and just print a plain summary using the same fields:
+
+```
+Subtopic: <name>
+Pages created: <list>
+Pages updated: <list>
+Sources ingested: <count>
+```
+
+If invoked by `/research-topic`, also return a structured outcome (subtopic name + completed/skipped/aborted + page counts) so the master-file checkbox can be flipped. This return value is independent of whether git is in use.
 
 ## Budget
 
