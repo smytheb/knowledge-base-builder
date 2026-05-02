@@ -9,7 +9,7 @@ Drives the end-to-end research flow for the Topic configured in `CLAUDE.md`. Run
 
 ## Preflight
 
-Read `CLAUDE.md`. If the Topic block still contains placeholder text (`Example Topic`, etc.), stop and tell the user to run `/start` first. Do not proceed.
+Read `CLAUDE.md`. If the Topic block still contains the literal string `Example Topic`, the repo is unconfigured — offer to run `/start` first and wait for confirmation. Do not proceed with overview fetching against a placeholder topic.
 
 ## Phase A — Overview
 
@@ -68,19 +68,4 @@ After the last subtopic, present a final summary: how many subtopics completed, 
 
 ## Budget
 
-- Phase A: max 5 fetches, max 1 wiki page created (plus source-summary pages)
-- Phase B: 0 fetches (planning only)
-- Phase C: each `/subtopic-loop` invocation enforces its own budget
-
-**Session ceiling** (across all phases of a single `/research-topic` run):
-
-- Max 100 fetches total
-- Max 30 new wiki pages created total (excluding source-summary pages)
-
-Track running totals across Phase A and every Phase C `/subtopic-loop` invocation. Before kicking off the next subtopic, check projected totals against the ceiling — if the next loop's worst-case budget would exceed it, stop and ask the user whether to extend, narrow the remaining scope, or end the run cleanly. The session ceiling is a runaway guard for unattended runs; the user may override per-run with an explicit instruction.
-
-If any budget is hit mid-phase, stop, report progress, ask the user whether to extend.
-
-## Logging
-
-Append to `wiki/log.md` at three points: end of Phase A (overview ingested), end of Phase B (master plan saved), end of Phase C (final summary).
+Per-phase and session-ceiling limits live in `CLAUDE.md > Safety & Limits > Budgets` (Research-topic entry). Track running totals across Phase A and every Phase C `/subtopic-loop` invocation. Before kicking off the next subtopic, check projected totals against the session ceiling — if the next loop's worst-case budget would exceed it, stop and ask the user whether to extend, narrow remaining scope, or end the run cleanly.

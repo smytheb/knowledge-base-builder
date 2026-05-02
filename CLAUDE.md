@@ -28,29 +28,17 @@ Wikilinks use basename only (`[[page-name]]`), not paths. Obsidian-style vault-w
 
 ### Attachments
 
-The `wiki/attachments/` directory hosts images (diagrams, screenshots, charts, photos) that wiki pages embed. Both the user and the agent may add files here.
+`wiki/attachments/` hosts images that wiki pages embed. Both user and agent may add files.
 
-**When to use:**
-- Embedding a diagram, screenshot, or figure that meaningfully aids understanding (architecture diagrams, command output screenshots, kernel subsystem maps, etc.)
-- Preserving an image extracted from an ingested source where the image is referenced by the wiki page
-- The user explicitly drops an image and asks for it to be included
+- **Use when** the image carries information (diagrams, screenshots, figures). **Skip** decorative images, images that duplicate prose, and external source-of-truth diagrams (link to the canonical source instead unless offline reference matters or the source is unstable).
+- **Naming**: lowercase, hyphen-separated, topic-specific (`linux-boot-process.png`, not `image1.png`).
+- **Embedding**: pages live in `wiki/NN-section/`, so use `../attachments/<file>` with descriptive alt text — the alt text is the fallback for both accessibility and future agents reading the page.
 
-**When NOT to use:**
-- Decorative images that add no informational value
-- Images that duplicate what prose or a code block already conveys
-- Source-of-truth diagrams from external sites — prefer linking to the canonical source instead of mirroring (only mirror when offline reference matters or the source is unstable)
+  ```markdown
+  ![Linux boot sequence from BIOS to init](../attachments/linux-boot-process.png)
+  ```
 
-**Naming:** Use lowercase, hyphen-separated, descriptive filenames that include the topic. Examples: `linux-boot-process.png`, `systemd-unit-hierarchy.svg`, `iptables-chain-flow.jpg`. Avoid generic names like `image1.png` or `screenshot.png`.
-
-**Embedding in wiki pages:** Use a relative path from the wiki page to the attachment, with descriptive alt text. Wiki pages live in `wiki/NN-section/`, so the relative path is `../attachments/`:
-
-```markdown
-![Linux boot sequence from BIOS to init](../attachments/linux-boot-process.png)
-```
-
-Always include alt text describing the image content — it is the fallback for accessibility and for agents reading the page later.
-
-**Attribution:** If an image came from an ingested source, note the origin in the wiki page's source attribution and, if applicable, the license. Do not add images whose license forbids redistribution.
+- **Attribution**: note origin and license on the embedding page. Do not add images whose license forbids redistribution.
 
 ### Page Format
 
@@ -71,97 +59,36 @@ Use `[[wikilinks]]` for cross-references between pages. Prefer linking to existi
 
 ### Operations
 
-**Ingest** — When the user asks to ingest a source:
-1. Read the source material (from `raw/` file, URL, or other input)
-2. Discuss key takeaways with the user before writing
-3. Create a summary page in `wiki/` for the source
-4. Create or update entity/concept pages for key topics found
-5. Update `wiki/index.md` with new/changed pages
-6. Append an entry to `wiki/log.md`
-7. Never modify the content of source files in `raw/`. The only sanctioned write to `raw/` is toggling the `[ ]` / `[x]` checkbox in `raw/sources.md` to mark a source as processed.
+All state-changing ops below append a line to `wiki/log.md` per Safety & Limits > Logging.
 
-**Ingest from sources.md** — When the user asks to process sources:
-1. Read `raw/sources.md` for the list of URLs and source descriptions
-2. Fetch and process each unprocessed source (check log.md to avoid duplicates)
-3. Follow the standard ingest workflow for each
-4. Mark sources as processed in the log
+**Ingest** — read the source, discuss key takeaways with the user, then create a summary page in `wiki/sources/` plus the relevant entity/concept pages, and update `wiki/index.md`. Bias toward extending existing pages over creating new ones.
 
-**Query** — When the user asks a question:
-1. Search relevant wiki pages for information
-2. Synthesize an answer with `[[wikilinks]]` citations to wiki pages
-3. If the answer reveals a gap, suggest new sources or flag it
-4. If the answer is substantial and reusable, offer to save it as a new wiki page
+**Ingest from sources.md** — process unprocessed entries from `raw/sources.md`, deduping against `wiki/log.md`. Mark each `[x]` after success. Standard Ingest workflow per source.
 
-**Explore** — When the user asks to explore a topic:
-1. Treat this as a *research-only* operation — do NOT fetch full content, do NOT create wiki pages, and do NOT modify `raw/sources.md`
-2. Use `WebSearch` (and lightweight `WebFetch` only when needed to verify a result is real and on-topic) to find candidate sources on the topic
-3. Aim for a diverse mix: official documentation (kernel.org, man pages, distro docs), authoritative books or papers, well-regarded blog posts or talks, and reference implementations
-4. For each candidate, capture: URL, title, source type (docs / book / blog / video / spec / repo), a one-line description of what it covers, and why it is relevant to the topic
-5. Filter out duplicates, paywalled content without a free alternative, and out-of-scope material (per the Topic section)
-6. Cross-check against `raw/sources.md` and `wiki/log.md` — flag any candidates that are already listed or already ingested
-7. Present the curated list to the user and ask which (if any) they want appended to `raw/sources.md`. Only after explicit user approval, append the chosen entries to `raw/sources.md` (the user owns that file — never edit it without approval)
-8. Append an entry to `wiki/log.md` recording the explore session: topic, number of candidates surfaced, and which were added to sources
-9. After the session, offer the user an **Outline** of the topic as a natural next step — useful for shaping the wiki structure before any Ingest run. Skip the offer if the user has already indicated they're done or if an outline for this topic already exists in `wiki/_outlines/`.
+**Query** — search the wiki, answer with `[[wikilink]]` citations, flag gaps. If the answer is substantial and reusable, offer to save it as a new page.
 
-**Lint** — When the user asks to lint/health-check:
-1. Scan all wiki pages for: contradictions, stale claims, orphan pages (no inbound links), missing cross-references, incomplete pages, data gaps
-2. Report findings with specific page references
-3. Suggest concrete fixes and new sources to investigate
-4. Update pages to fix issues upon user approval
+**Explore** — *research-only*: no full-content fetches, no wiki pages, no writes to `raw/sources.md` without explicit user approval. Use `WebSearch` (+ lightweight `WebFetch` only to verify a result). Aim for a diverse, on-scope mix; capture URL, title, type (docs/book/blog/video/spec/repo), one-line description, relevance. Dedup against `raw/sources.md` and `wiki/log.md`. Present the curated list, ask which (if any) to append to `raw/sources.md`, append only after explicit approval. After the session, offer **Outline** as a natural next step (skip if one already exists in `wiki/_outlines/` or the user signals done).
 
-**Outline** — When the user asks to outline a topic (planning, no fetching):
-1. Treat this as a *planning-only* operation — do NOT fetch sources, do NOT create wiki pages
-2. Propose a target structure for the topic: candidate pages (with type: concept / entity / summary / overview), the key questions each page should answer, and the cross-links between them
-3. Identify open questions and knowledge gaps that ingestion will need to fill
-4. Cross-check against existing `wiki/index.md` — mark which proposed pages already exist, which would extend an existing page, and which are net-new
-5. Present the outline to the user for approval or revision before any Ingest / Question-driven ingest run
-6. On approval, save the outline as `wiki/_outlines/<topic-slug>.md` (a working document, not a published page — exclude from index) and append an entry to `wiki/log.md`
+**Lint** — scan wiki pages for contradictions, stale claims, orphan pages, missing cross-references, incomplete pages. Report with specific page references; fix on user approval.
 
-**Triangulate** — When the user asks to triangulate a claim, page, or section:
-1. Identify the specific claims to verify (extract them as a numbered list and confirm with the user if ambiguous)
-2. For each claim, find at least 2 independent sources — prefer sources already in the wiki; use `WebSearch` / `WebFetch` to find more if needed (subject to Safety & Limits budgets)
-3. Independence matters: two pages on the same site, or one source citing the other, do not count as independent. Note the relationship when sources are linked.
-4. For each claim, classify as: **confirmed** (≥2 independent sources agree), **contested** (sources disagree — record both positions), **single-source** (only one source found — flag for follow-up), or **unsupported** (no source found)
-5. Update the affected wiki page(s): add inline citations for confirmed claims, add a "Contested" note with both positions for contested claims, mark single-source/unsupported claims with a `> [!warning]` callout
-6. If new sources were fetched, follow the standard Ingest path for them (summary page, index update) so the evidence is preserved
-7. Append an entry to `wiki/log.md` summarizing claims checked and outcomes
+**Outline** — *planning-only*: no fetching, no wiki pages. Propose a target structure (candidate pages with type, key questions per page, cross-links), cross-check against `wiki/index.md` (annotate **new** / **extends-existing** / **already-covered**), present for approval. On approval, save as `wiki/_outlines/<topic-slug>.md` (excluded from index).
 
-**Question-driven ingest** — When the user provides a question or set of questions to research:
-1. **Interview first** (skip if the user said "just go" or the prompt is already specific). Ask up to 5 clarifying questions in a *single batched message*, covering only what is genuinely ambiguous. Typical axes:
-   - **Scope**: what's in/out for this question
-   - **Depth**: overview, working knowledge, or deep technical
-   - **Audience**: who is the wiki page for (affects assumed background and writing style)
-   - **Output shape**: one page, a cluster, or answers inline in existing pages
-   - **Acceptance**: when is this "done" — what would the user want to be able to look up afterward
-2. Decompose the question(s) into a list of concrete sub-questions and present it for user approval
-3. Run Explore (or use existing sources from `raw/sources.md` and the wiki) to gather candidate sources scoped to the sub-questions
-4. Ingest only sources that materially advance one or more sub-questions. Skip sources that are merely topical but do not answer anything on the list.
-5. As pages are created/updated, tag each sub-question with the page(s) that address it
-6. At the end, produce a **coverage report**: for each sub-question, list which sources/pages answer it, and explicitly flag any sub-questions that remain unanswered (with suggested next sources)
-7. Append an entry to `wiki/log.md` recording the original question, the sub-question list, and coverage outcome
+**Triangulate** — extract the specific claims to verify (confirm with user if ambiguous). For each claim find ≥2 independent sources — two pages on the same site or one citing the other do **not** count as independent. Classify each as **confirmed** / **contested** / **single-source** / **unsupported**, then annotate the affected page(s): inline citations for confirmed, "Contested" note with both positions for contested, `> [!warning]` callout for single-source/unsupported.
 
-**Bootstrap** (`/start`) — When the user runs `/start` or asks to set up a fresh repo:
-1. Detect placeholder text in the Topic block (`Example Topic`, etc.). If none present, the repo is already configured — offer to skip to `/research-topic` instead of re-interviewing.
-2. Run a single batched interview covering: topic, in-scope, out-of-scope, audience, depth, success criteria.
-3. Show the user the proposed updated Topic block as a diff and only save after confirmation.
-4. After saving, offer `/research-topic` as the next step but do not chain into it automatically.
-5. Full procedure lives in `.claude/skills/start/SKILL.md`.
+**Question-driven ingest** — for a research question (or set):
+1. **Interview first** unless the user said "just go". Ask up to 5 clarifying questions in one batched message, covering the same axes as `/start` (scope, depth, audience) plus *output shape* (one page / cluster / inline) and *acceptance* (what the user wants to look up afterward).
+2. Decompose into concrete sub-questions and get user approval of the list.
+3. Gather sources via Explore or existing `raw/sources.md` + wiki content.
+4. Ingest only sources that materially advance ≥1 sub-question. Tag each page with the sub-question(s) it answers.
+5. End with a **coverage report**: which page(s) answer each sub-question, plus unanswered sub-questions with suggested next sources.
 
-**Research-topic** (`/research-topic`) — Master orchestrator for end-to-end wiki build-out on the configured Topic:
-1. Phase A — overview: explorer subagent surfaces 1–3 overview sources, user approves, ingestor drafts, user approves, write to `wiki/00-overview/`.
-2. Phase B — master plan: derive a 5–15 entry subtopic list, save as `wiki/_outlines/<topic-slug>-master.md` with `[ ]`/`[x]` checkboxes, get user approval.
-3. Phase C — iterate: for each unchecked subtopic, ask before invoking `/subtopic-loop`; on completion, flip the checkbox and append a log entry. Sequential in v1.
-4. Full procedure lives in `.claude/skills/research-topic/SKILL.md`.
+**Guided workflows** — slash commands whose full procedure lives in `.claude/skills/<name>/SKILL.md` and loads only when invoked:
 
-**Subtopic-loop** (`/subtopic-loop`) — Per-subtopic research with two human approval gates. Standalone runnable; also invoked by `/research-topic`:
-1. Step 1 — Explore: spawn explorer subagent for candidate sources.
-2. Step 2 — **GATE 1: source approval** — user picks ingest-now / save-for-later (appends to `raw/sources.md`) / discard.
-3. Step 3 — Ingest: ingestor subagent returns drafts only; **no writes**.
-4. Step 4 — Structure preview: assemble new pages, updates as diffs, index/log deltas, cross-link audit.
-5. Step 5 — **GATE 2: structure approval** — user approves; only then does the agent write to `wiki/`.
-6. Step 6 — Lint the new/changed pages; auto-fix mechanical issues, surface judgment calls.
-7. Step 7 — Commit prep: `git status` summary + proposed message. The user runs the commit themselves.
-8. Full procedure lives in `.claude/skills/subtopic-loop/SKILL.md`.
+- **`/start`** — interview the user and write the Topic block. First-time setup.
+- **`/research-topic`** — orchestrate end-to-end wiki build-out: overview → master subtopic plan → iterate `/subtopic-loop` per subtopic. Sequential in v1.
+- **`/subtopic-loop`** — per-subtopic research with two human approval gates (source approval, structure approval). Standalone runnable; also invoked by `/research-topic`.
+
+The two-gate invariant for `/subtopic-loop` and the no-writes-between-gates rule are enforced via the Hard rules below.
 
 ### Writing Style
 
@@ -173,11 +100,7 @@ Use `[[wikilinks]]` for cross-references between pages. Prefer linking to existi
 
 ### Source Handling
 
-- **Local files** (`raw/`): Read directly. Support markdown, text, PDFs, images.
-- **URLs** (in `sources.md`): Fetch using WebFetch tool. If a URL fails, note it in the log and move on.
-- **YouTube videos**: Fetch the page to extract available information (title, description, transcript if available).
-- **Documentation sites**: Fetch key pages. Follow links to subpages when needed for completeness.
-- **Technical specifications**: Extract definitions, requirements, and relationships into structured wiki pages.
+Local files in `raw/` → `Read`. URLs → `WebFetch`. On fetch failure, log it and move on. For docs sites, follow internal links only when needed for completeness (respect the per-op fetch budget). For YouTube, fetch the page for title/description/transcript when available.
 
 ## Safety & Limits
 

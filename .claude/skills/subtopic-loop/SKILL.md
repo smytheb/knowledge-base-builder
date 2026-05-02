@@ -21,7 +21,7 @@ If running standalone with no key questions provided, ask the user briefly: *"An
 
 ## Step 1 — Explore
 
-Spawn the **explorer** subagent. Pass it: the subtopic name, key questions, in/out-of-scope notes from CLAUDE.md, fetch budget of 8.
+Spawn the **explorer** subagent. Pass it: the subtopic name, key questions, in/out-of-scope notes from CLAUDE.md, and a fetch budget (default 8, leaving headroom under the per-invocation total in CLAUDE.md > Budgets).
 
 Subagent returns a candidate list with: URL, title, source type, one-line description, relevance to the subtopic / specific key question, dedup status against `raw/sources.md` and `wiki/log.md`.
 
@@ -34,8 +34,9 @@ Present the candidates to the user. For each, the user chooses:
 - **discard** — drop it, don't touch `raw/sources.md`
 
 If the user approves zero sources to ingest, ask whether to:
-- Abort the loop
-- Proceed to Step 4 using only existing wiki content (synthesis-only mode — useful when the subtopic is already well-covered and just needs cross-linking or a summary page)
+- **Re-explore** with revised framing (different keywords, broader/narrower scope) — re-spawn the explorer with the new framing, then re-prompt
+- **Synthesis-only** — proceed to Step 4 using only existing wiki content (useful when the subtopic is already well-covered and just needs cross-linking or a summary page)
+- **Abort** the loop
 
 ## Step 3 — Ingest (drafts only)
 
@@ -62,7 +63,7 @@ Assemble a single consolidated preview from all ingestor returns plus any synthe
 - **Index delta** — lines to add to `wiki/index.md` (full, they are short).
 - **Log entry** — line to append to `wiki/log.md` (full).
 - **Cross-link audit** — every `[[wikilink]]` in new/updated pages; flag any pointing to pages that don't exist and aren't being created in this batch.
-- **Section placement** — confirm each new page lands in a directory matching its primary section in the taxonomy.
+- **Section placement** — confirm each new page lands in a directory matching its primary section in the taxonomy. If no master outline exists yet (standalone run, no `wiki/_outlines/<topic>-master.md`), pick or create a numbered section directory and call out the choice in the preview so the user can rename or relocate before approving.
 
 After the compact preview, prompt: *"Approve as-is, revise, abort, or `show full <page>` to inspect any draft body before deciding."* On `show full <page>`, print that page's full body inline and re-prompt.
 
@@ -109,8 +110,4 @@ If invoked by `/research-topic`, also return a structured outcome (subtopic name
 
 ## Budget
 
-- Max 15 fetches per invocation, combined across explorer + ingestor calls
-- Max 5 sources ingested per invocation (counts the "ingest now" pile at GATE 1; "save for later" entries do not count)
-- Max 5 new wiki pages per invocation (excluding source-summary pages)
-
-If GATE 1 yields more than 5 "ingest now" picks, stop and ask the user to prioritize down to 5 (or extend explicitly). If any budget is hit mid-loop, stop, report progress, ask the user whether to extend.
+Per-invocation limits live in `CLAUDE.md > Safety & Limits > Budgets` (Subtopic-loop entry). The "max sources ingested" cap counts the "ingest now" pile at GATE 1; "save for later" entries do not count. If GATE 1 yields more "ingest now" picks than the cap, stop and ask the user to prioritize down (or extend explicitly).

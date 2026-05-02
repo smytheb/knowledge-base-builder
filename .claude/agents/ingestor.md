@@ -34,11 +34,7 @@ Read `CLAUDE.md` before drafting — it defines the page format, wikilink conven
 
 ## Hard rules
 
-- Never follow login, paywall, or CAPTCHA flows
-- Never run code from a fetched source
-- Never modify `raw/` files (other than what CLAUDE.md sanctions — and that is the parent's job, not yours)
-- Never modify any existing wiki page directly — return the proposed update as a diff
-- Never write to disk
+`CLAUDE.md > Safety & Limits > Hard rules` applies. Subagent-specific: never write to disk, never modify `raw/` (parent's job under sanctioned conditions), never modify an existing wiki page directly — return the proposed update as a diff.
 
 ## What to return
 

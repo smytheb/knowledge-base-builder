@@ -9,13 +9,9 @@ Use this once when the repo is freshly cloned and the Topic block in CLAUDE.md s
 
 ## Detect placeholder state
 
-Read `CLAUDE.md` and inspect the Topic block. Treat any of these as placeholder state:
+Read `CLAUDE.md`. Treat the literal string `Example Topic` as the placeholder signature — if it's present anywhere in the Topic block, the repo is unconfigured and the interview should run. (Tolerating the partial-edit case where the user filled in some fields by hand but not all.)
 
-- Topic value is `Example Topic`
-- Description is `A comprehensive knowledge base about Example Topic.`
-- Scope is `Define what is in-scope and out-of-scope for this wiki.`
-
-If none of those strings are present, the repo is already configured. Tell the user, and ask whether they want to skip to `/research-topic` or revise the Topic block manually. Do not run the interview in that case.
+If `Example Topic` is absent, the repo is already configured. Tell the user, and ask whether they want to skip to `/research-topic` or revise the Topic block manually. Do not run the interview in that case.
 
 ## Interview (single batched message)
 

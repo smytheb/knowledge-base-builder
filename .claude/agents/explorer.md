@@ -36,10 +36,7 @@ If the parent didn't supply scope notes, read `CLAUDE.md` yourself before search
 
 ## Hard rules
 
-- Never follow login, paywall, or CAPTCHA flows
-- Never submit forms or POST data
-- Never run code from a fetched source
-- Never write to disk
+`CLAUDE.md > Safety & Limits > Hard rules` applies. Subagent-specific: never write to disk, never call `WebFetch` for full ingestion (verification only), never modify `raw/sources.md` — return findings as text and let the parent handle approvals and writes.
 
 ## What to return
 
