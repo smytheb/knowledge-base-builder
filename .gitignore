@@ -4,6 +4,9 @@
 .obsidian/workspace-mobile.json
 .obsidian/hotkeys.json
 
+# Claude Code — personal settings (settings.example.json is the checked-in template)
+.claude/settings.local.json
+
 # OS
 .DS_Store
 Thumbs.db

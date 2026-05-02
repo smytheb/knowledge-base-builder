@@ -53,14 +53,18 @@ Subagent returns drafts as text:
 
 ## Step 4 — Structure preview
 
-Assemble a single consolidated preview from all ingestor returns plus any synthesis the main agent wants to add (e.g., cross-links between newly-drafted pages). The preview must include:
+Assemble a single consolidated preview from all ingestor returns plus any synthesis the main agent wants to add (e.g., cross-links between newly-drafted pages).
 
-- **New pages**: full path (e.g. `wiki/03-foo/bar.md`), type, full body
-- **Updates**: target path, diff
-- **Index delta**: lines to add to `wiki/index.md`
-- **Log entry**: line to append to `wiki/log.md`
-- **Cross-link audit**: every `[[wikilink]]` in new/updated pages — flag any that point to pages that don't exist and aren't being created in this batch
-- **Section placement**: confirm each new page lands in a directory matching its primary section in the taxonomy
+**Default (compact) preview** — the goal is a screen-sized scannable summary, not a full read-through. Drafts are kept in conversation memory and shown in full only on request.
+
+- **New pages** — for each: full path (e.g. `wiki/03-foo/bar.md`), `type`, frontmatter `title` + `sources`, the H2/H3 outline, and word count. Do **not** print the body.
+- **Updates** — target path + diff hunks only (no surrounding-context dump).
+- **Index delta** — lines to add to `wiki/index.md` (full, they are short).
+- **Log entry** — line to append to `wiki/log.md` (full).
+- **Cross-link audit** — every `[[wikilink]]` in new/updated pages; flag any pointing to pages that don't exist and aren't being created in this batch.
+- **Section placement** — confirm each new page lands in a directory matching its primary section in the taxonomy.
+
+After the compact preview, prompt: *"Approve as-is, revise, abort, or `show full <page>` to inspect any draft body before deciding."* On `show full <page>`, print that page's full body inline and re-prompt.
 
 ## Step 5 — GATE 2: Structure approval
 
@@ -106,6 +110,7 @@ If invoked by `/research-topic`, also return a structured outcome (subtopic name
 ## Budget
 
 - Max 15 fetches per invocation, combined across explorer + ingestor calls
+- Max 5 sources ingested per invocation (counts the "ingest now" pile at GATE 1; "save for later" entries do not count)
 - Max 5 new wiki pages per invocation (excluding source-summary pages)
 
-If hit mid-loop, stop, report progress, ask the user whether to extend.
+If GATE 1 yields more than 5 "ingest now" picks, stop and ask the user to prioritize down to 5 (or extend explicitly). If any budget is hit mid-loop, stop, report progress, ask the user whether to extend.

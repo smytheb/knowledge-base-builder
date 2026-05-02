@@ -72,7 +72,14 @@ After the last subtopic, present a final summary: how many subtopics completed, 
 - Phase B: 0 fetches (planning only)
 - Phase C: each `/subtopic-loop` invocation enforces its own budget
 
-If a budget is hit mid-phase, stop, report progress, ask the user whether to extend.
+**Session ceiling** (across all phases of a single `/research-topic` run):
+
+- Max 100 fetches total
+- Max 30 new wiki pages created total (excluding source-summary pages)
+
+Track running totals across Phase A and every Phase C `/subtopic-loop` invocation. Before kicking off the next subtopic, check projected totals against the ceiling — if the next loop's worst-case budget would exceed it, stop and ask the user whether to extend, narrow the remaining scope, or end the run cleanly. The session ceiling is a runaway guard for unattended runs; the user may override per-run with an explicit instruction.
+
+If any budget is hit mid-phase, stop, report progress, ask the user whether to extend.
 
 ## Logging
 

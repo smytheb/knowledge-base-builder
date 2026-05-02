@@ -1,0 +1,29 @@
+{
+  "_README": [
+    "Template for .claude/settings.local.json. Copy this file to .claude/settings.local.json and edit.",
+    "settings.local.json is gitignored and personal; this example file is checked into the repo as a starting point.",
+    "",
+    "Permissions reduce harness approval prompts for tools the agent uses constantly.",
+    "Safety net: CLAUDE.md > Safety & Limits still applies on top of harness permissions.",
+    "Hard rules (no script execution, no auth flows, no writes outside sanctioned paths) cannot be overridden here.",
+    "",
+    "Why each entry below:",
+    "- WebSearch: read-only, no domain to trust. Safe to allow globally.",
+    "- WebFetch(domain:...): pre-approved domains the explorer/ingestor subagents fetch from frequently.",
+    "  Add the domains your topic relies on (canonical docs, reference sites, Wikipedia, etc.).",
+    "  Anything not on this list will still prompt — that prompt has a 'always allow this domain' option,",
+    "  which appends to settings.local.json automatically. Your trusted-domain list grows naturally over time.",
+    "- Bash(git mv *): lets the agent rename pages without re-prompting (used during lint/refactor).",
+    "",
+    "If you set CLAUDE.md > Safety & Limits > Domain access > Allowlist to non-empty,",
+    "keep this WebFetch list aligned — the policy lives in CLAUDE.md, the prompts are silenced here."
+  ],
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(git mv *)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

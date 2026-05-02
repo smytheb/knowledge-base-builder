@@ -35,7 +35,19 @@ claude
 
 Claude Code opens inside your terminal. The first time you run it, it'll walk you through signing in.
 
-### 5. Run `/start`
+### 5. (Optional) Pre-approve common tool permissions
+
+To cut down on harness approval prompts during research, copy the example permissions file:
+
+```bash
+cp .claude/settings.example.json .claude/settings.local.json
+```
+
+Edit `.claude/settings.local.json` to add the `WebFetch(domain:...)` entries that match your topic (e.g., `kernel.org`, `man7.org`). `settings.local.json` is gitignored — it's your personal config. The `WebSearch` entry is safe to leave on for everyone (read-only, no domain). Anything not pre-approved still prompts, with an "always allow this domain" option that grows the file automatically.
+
+CLAUDE.md's *Safety & Limits* (hard rules, denylist, budgets) sits on top regardless of what you allow here.
+
+### 6. Run `/start`
 
 Type `/start` and press Enter. The agent will:
 
@@ -45,7 +57,7 @@ Type `/start` and press Enter. The agent will:
 
 From there, the agent guides you through each step. You approve sources before they're ingested and approve the page structure before anything is written to the wiki.
 
-### 6. (Optional) Open the folder in Obsidian
+### 7. (Optional) Open the folder in Obsidian
 
 Obsidian → "Open vault" → pick the `knowledge-base-builder` folder. The vault is pre-configured to use basename `[[wikilinks]]`, route attachments into `wiki/attachments/`, and hide `raw/` from search. You can browse pages and click links while the agent works.
 

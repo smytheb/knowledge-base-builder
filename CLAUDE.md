@@ -223,8 +223,8 @@ The agent enforces these on itself. If a budget is hit mid-operation, stop, repo
 - **Question-driven ingest**: max 30 fetches across the whole run, max 8 new wiki pages created
 - **Outline**: 0 fetches (planning only)
 - **Bootstrap** (`/start`): 0 fetches (interview + CLAUDE.md edit only)
-- **Research-topic** (`/research-topic`): Phase A max 5 fetches and 1 wiki page (plus source-summary pages); Phase B 0 fetches; Phase C delegates to `/subtopic-loop` budgets per invocation
-- **Subtopic-loop** (`/subtopic-loop`): max 15 fetches combined across explorer + ingestor, max 5 new wiki pages per invocation (excluding source-summary pages)
+- **Research-topic** (`/research-topic`): Phase A max 5 fetches and 1 wiki page (plus source-summary pages); Phase B 0 fetches; Phase C delegates to `/subtopic-loop` budgets per invocation. **Session ceiling** across all phases of one run: max 100 fetches total, max 30 new wiki pages total (runaway guard for unattended runs)
+- **Subtopic-loop** (`/subtopic-loop`): max 15 fetches combined across explorer + ingestor, max 5 sources ingested per invocation, max 5 new wiki pages per invocation (excluding source-summary pages)
 
 The user may override any budget for a specific run with an explicit instruction (e.g., "go up to 50 fetches on this one"). Overrides do not persist.
 
