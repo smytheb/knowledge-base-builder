@@ -21,12 +21,13 @@ If the parent didn't supply scope notes, read `CLAUDE.md` yourself before search
 ## How to work
 
 1. Read `raw/sources.md` and `wiki/log.md` first so you can flag duplicates and already-ingested sources. This is mandatory — the parent will not have done it for you.
-2. Run `WebSearch` queries to surface candidates. Aim for diversity:
-   - Official documentation, specs, RFCs, canonical reference docs
-   - Authoritative books or papers
-   - Well-regarded blog posts, conference talks, videos
-   - Reference implementations (linked repos)
-3. Use `WebFetch` sparingly — only to verify a result is real and on-topic when the search snippet is ambiguous. Do **not** fetch full content for ingestion; that is the ingestor's job, not yours.
+2. Run `WebSearch` queries to surface candidates. Aim for diversity, and rank by **source authority** (higher tiers are the ones the ingestor should lean on):
+   - Official documentation, specs, RFCs, standards, canonical reference docs — *highest authority*
+   - Authoritative books, peer-reviewed papers
+   - Well-regarded blog posts, conference talks, videos, reference implementations (linked repos)
+   - **Never treat as primary:** Stack Overflow / forum answers, AI-generated summaries, SEO/content-farm pages. They can point you toward a real source, but flag them as secondary and prefer a canonical source that backs the same claim.
+   Multiple `WebSearch` calls are independent — fire them together rather than one-at-a-time; total time should be about the slowest query, not the sum.
+3. Use `WebFetch` sparingly — only to verify a result is real and on-topic when the search snippet is ambiguous. Do **not** fetch full content for ingestion; that is the ingestor's job, not yours. When you cite a candidate, capture the **specific deep-linked page (with anchor)**, not the site homepage — `react.dev/reference/react/useEffect`, not `react.dev`. Anchored deep links survive doc restructuring and tell the ingestor exactly where to read.
 4. Filter aggressively:
    - Drop paywalled content unless a free alternative exists
    - Drop duplicates within the candidate set, against `raw/sources.md`, and against `wiki/log.md`

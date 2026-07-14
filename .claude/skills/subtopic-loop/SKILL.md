@@ -10,7 +10,7 @@ Runs one subtopic end-to-end with two human approval gates:
 - **GATE 1** after Explore — user approves which candidate sources to ingest now / save for later / discard
 - **GATE 2** after draft assembly — user approves the proposed wiki changes before *any* writes happen
 
-**Critical invariant:** the agent must never write to `wiki/` between GATE 1 and GATE 2. All drafts live in subagent return values and in the conversation until GATE 2 passes. The only sanctioned writes during this window are appending approved-for-later entries to `raw/sources.md` (per the GATE 1 user approval).
+**Critical invariant:** never write to `wiki/` between GATE 1 and GATE 2 — drafts live in subagent return values and the conversation until GATE 2 passes. The only sanctioned write in that window is appending approved-for-later entries to `raw/sources.md`. This is enforced by `CLAUDE.md > Safety & Limits > Hard rules` (canonical statement); it is repeated here only as the operational reminder.
 
 ## Inputs
 
@@ -65,7 +65,9 @@ Assemble a single consolidated preview from all ingestor returns plus any synthe
 - **Cross-link audit** — every `[[wikilink]]` in new/updated pages; flag any pointing to pages that don't exist and aren't being created in this batch.
 - **Section placement** — confirm each new page lands in a directory matching its primary section in the taxonomy. If no master outline exists yet (standalone run, no `wiki/_outlines/<topic>-master.md`), pick or create a numbered section directory and call out the choice in the preview so the user can rename or relocate before approving.
 
-After the compact preview, prompt: *"Approve as-is, revise, abort, or `show full <page>` to inspect any draft body before deciding."* On `show full <page>`, print that page's full body inline and re-prompt.
+After the compact preview, prompt: *"Approve as-is, revise, abort, `show full <page>` to inspect a draft body, or `verify <page>` for an adversarial fact-check before deciding."* On `show full <page>`, print that page's full body inline and re-prompt.
+
+**Optional verify (opt-in).** On `verify <page>` — or proactively for a page making high-stakes or surprising claims — spawn the **verifier** subagent with the drafted page and its sources (but *not* your framing of why it's correct). It returns a disprove-oriented findings list; fold any real issues into the draft before re-presenting. This is off the default fast path — only run it when asked or when a draft's confidence warrants it.
 
 ## Step 5 — GATE 2: Structure approval
 
@@ -82,15 +84,7 @@ After approval, write all files in one batch:
 
 ## Step 6 — Lint
 
-Scan the new and changed pages for:
-
-- **Contradictions** with existing wiki content (search for related pages and compare claims)
-- **Broken `[[wikilinks]]`** — link target file doesn't exist anywhere in `wiki/`
-- **Orphan pages** — newly-created pages with no inbound links from other wiki pages (flag, don't auto-fix; sometimes a fresh page legitimately has no inbound links yet)
-- **Missing "See also"** section
-- **Frontmatter completeness** — title, type, sources, created, updated all present
-
-Auto-fix mechanical issues (incomplete frontmatter, obvious wikilink target typos where the intended target is unambiguous). Surface judgment calls (contradictions, orphans, missing cross-references) for the user.
+Run the **`/lint`** skill scoped to the pages just created or changed (pass it the list of touched paths). It checks contradictions, broken `[[wikilinks]]`, orphans, missing "See also", and frontmatter completeness — auto-fixing mechanical issues and surfacing judgment calls. Don't restate the checklist here; `/lint` owns it.
 
 ## Step 7 — Wrap-up
 
@@ -121,4 +115,4 @@ If invoked by `/research-topic`, also return a structured outcome (subtopic name
 
 ## Budget
 
-Per-invocation limits live in `CLAUDE.md > Safety & Limits > Budgets` (Subtopic-loop entry). The "max sources ingested" cap counts the "ingest now" pile at GATE 1; "save for later" entries do not count. If GATE 1 yields more "ingest now" picks than the cap, stop and ask the user to prioritize down (or extend explicitly).
+Follows the per-operation caps in `CLAUDE.md > Safety & Limits > Budgets`: ~15 combined fetches across the explorer + ingestor(s), and ingest at most ~5 sources per invocation (the "ingest now" pile at GATE 1; "save for later" entries don't count). If GATE 1 yields more "ingest now" picks than that, stop and ask the user to prioritize down or extend explicitly.

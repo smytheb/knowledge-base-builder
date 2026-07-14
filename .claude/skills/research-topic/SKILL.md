@@ -5,7 +5,7 @@ description: Master orchestrator for building out a wiki on the configured Topic
 
 # /research-topic — Master orchestrator
 
-Drives the end-to-end research flow for the Topic configured in `CLAUDE.md`. Runs subtopics **sequentially** in v1 — parallelism is reserved for the future SQLite-backed v2. Two human approval gates apply within each subtopic (delegated to `/subtopic-loop`).
+Drives the end-to-end research flow for the Topic configured in `CLAUDE.md`. Runs subtopics **sequentially** — each one goes through `/subtopic-loop`, which carries the two human approval gates.
 
 ## Preflight
 
@@ -13,7 +13,7 @@ Read `CLAUDE.md`. If the Topic block still contains the literal string `Example 
 
 ## Phase A — Overview
 
-1. Spawn the **explorer** subagent. Pass it the Topic, the in/out-of-scope notes from CLAUDE.md, and a fetch budget of 5. Ask for 1–3 high-quality *overview* sources (encyclopedic articles, canonical docs, well-regarded primers — not deep-dives on a single subtopic).
+1. Spawn the **explorer** subagent. Pass it the Topic, the in/out-of-scope notes from CLAUDE.md, and a fetch budget of 3 (this is an overview scout, not an exhaustive sweep). Ask for 1–3 high-quality *overview* sources (encyclopedic articles, canonical docs, well-regarded primers — not deep-dives on a single subtopic).
 2. Present the candidates to the user. They pick 0–N to ingest as the overview source(s).
 3. For each approved source, spawn the **ingestor** subagent. The subagent returns drafts only — it does not write to disk.
 4. Show the draft(s) to the user. After approval:
@@ -68,4 +68,4 @@ After the last subtopic, present a final summary: how many subtopics completed, 
 
 ## Budget
 
-Per-phase and session-ceiling limits live in `CLAUDE.md > Safety & Limits > Budgets` (Research-topic entry). Track running totals across Phase A and every Phase C `/subtopic-loop` invocation. Before kicking off the next subtopic, check projected totals against the session ceiling — if the next loop's worst-case budget would exceed it, stop and ask the user whether to extend, narrow remaining scope, or end the run cleanly.
+Budget policy lives in `CLAUDE.md > Safety & Limits > Budgets`. There is no session-wide ceiling — the per-operation fetch cap applies within Phase A (a small overview allowance: ~3 explorer fetches + a couple of ingest fetches) and again within each Phase C `/subtopic-loop` invocation. The per-subtopic approval prompt in Phase C is the real backstop against a run growing too large; if the wiki is ballooning faster than the user expected, say so at the next prompt and let them narrow scope or stop.

@@ -4,7 +4,7 @@ A local, AI-maintained knowledge base for any topic — powered by Claude Code a
 
 Built on top of [Karpathy's LLM Wiki concept](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) and extended into a research workflow: the agent helps you find sources, plan structure, ingest material, verify claims across sources, and answer questions over the resulting wiki.
 
-The wiki itself is the backbone — plain markdown files you fully own. The agent gains a set of guided workflows on top (`/start`, `/research-topic`, `/subtopic-loop`) plus granular operations (Explore, Outline, Ingest, Triangulate, Query, Lint) for finer control.
+The wiki itself is the backbone — plain markdown files you fully own. On top the agent gains slash-command skills (`/start`, `/research-topic`, `/subtopic-loop`, `/ingest`, `/query`, `/triangulate`, `/lint`) plus a few natural-language operations (Explore, Outline, Question-driven ingest) for finer control.
 
 ---
 
@@ -83,7 +83,7 @@ Three guided slash commands wrap the lower-level operations:
 
 - **`/start`** — bootstrap a fresh repo. Interviews you for topic, scope, audience, depth, and success criteria, then writes the answers into `CLAUDE.md`. Run this once after downloading.
 
-- **`/research-topic`** — master orchestrator for end-to-end build-out of the configured topic. Phase A: fetch and approve an overview source. Phase B: derive a subtopic plan saved as a checklist in `wiki/_outlines/`. Phase C: iterate each subtopic through `/subtopic-loop` with approval at each step. Sequential in v1; SQLite-backed parallelism is reserved for v2.
+- **`/research-topic`** — master orchestrator for end-to-end build-out of the configured topic. Phase A: fetch and approve an overview source. Phase B: derive a subtopic plan saved as a checklist in `wiki/_outlines/`. Phase C: iterate each subtopic through `/subtopic-loop` with approval at each step. Subtopics run sequentially.
 
 - **`/subtopic-loop <name>`** — runs the full per-subtopic research loop. Standalone-runnable, also invoked by `/research-topic`. Two human approval gates:
   - **Gate 1** after source exploration — you choose which candidates to ingest now, save for later (appended to `raw/sources.md`), or discard.
@@ -93,23 +93,29 @@ Three guided slash commands wrap the lower-level operations:
 
 ---
 
-## Granular Operations
+## More Skills
 
-The agent also recognizes these natural-language operations (defined in `CLAUDE.md`):
+Beyond the three orchestration workflows above, these slash commands each cover one operation:
+
+- **`/ingest`** — ingest one source (file or URL), or batch-process `raw/sources.md`. Drafts pages, previews the structure, writes on approval.
+
+- **`/query`** — ask any question about your topic; answers from the wiki with `[[wikilink]]` citations and honest confidence, and flags gaps.
+
+- **`/triangulate`** — verify claims against ≥2 independent sources; classify as confirmed, contested, single-source, or unsupported; annotate pages accordingly. Can run an adversarial fact-check pass.
+
+- **`/lint`** — health-check for contradictions, stale/overdue pages, orphans, broken `[[wikilinks]]`, and frontmatter gaps.
+
+  *Upgrading an existing wiki?* Pages now carry `status` and `review-date` frontmatter, which drive the staleness checks. Wikis built before those fields existed will be missing them — run `/lint` once and approve the auto-fixes to backfill both (`status: published`, `review-date` ~12 months out from each page's `updated`).
+
+## Natural-language operations
+
+A few lighter operations are triggered by asking for them by name (defined in `CLAUDE.md`):
 
 - **Explore** — `"Explore [topic]"` — research-only; surfaces candidate sources, asks before adding any to `raw/sources.md`. Offers an Outline as a follow-up.
 
 - **Outline** — `"Outline [topic]"` — planning-only; proposes a wiki page structure before any ingestion. Saved to `wiki/_outlines/`.
 
-- **Ingest** — `"Ingest [file or URL]"` or `"Process my sources"` — read source material, create summary + entity/concept pages, update the index and log.
-
 - **Question-driven ingest** — `"Research [question]"` — brief interview to scope the question, decomposes into sub-questions, ingests only sources that answer them, ends with a coverage report.
-
-- **Triangulate** — `"Triangulate [page or claim]"` — verify claims against ≥2 independent sources; classify as confirmed, contested, single-source, or unsupported; annotate pages accordingly.
-
-- **Query** — `"[any question about your topic]"` — search the wiki and answer with `[[wikilinks]]` citations. Flags gaps.
-
-- **Lint** — `"Lint the wiki"` — health-check for contradictions, stale claims, orphan pages, and cross-reference gaps.
 
 ---
 
@@ -119,8 +125,8 @@ The agent also recognizes these natural-language operations (defined in `CLAUDE.
 CLAUDE.md         # Agent configuration — Topic + operations + Safety & Limits
 README.md         # This file
 .claude/
-  skills/         # Guided workflow definitions (start, research-topic, subtopic-loop)
-  agents/         # Subagent definitions (explorer, ingestor)
+  skills/         # Skill definitions (start, research-topic, subtopic-loop, ingest, query, triangulate, lint)
+  agents/         # Subagent definitions (explorer, ingestor, verifier)
 .obsidian/        # Pre-configured Obsidian vault settings
 raw/              # User-owned source materials
   sources.md      # URL/source index; agent toggles [ ]/[x] and appends with approval
@@ -174,7 +180,7 @@ Edit the lists in that section to tighten behavior for your topic. Approvals and
 - **Everything is markdown** — works with Obsidian, git, grep, and any editor.
 - **Sources are tracked** — every claim traces to a source via inline citations, frontmatter, and the log.
 - **Local-first** — the wiki lives entirely in this directory. No external service required to read or own it.
-- **Human in the loop by default** — `/subtopic-loop` requires explicit approval at the source-selection and structure-write gates. Removing the human is a v2 concern, paired with SQLite-backed coordination.
+- **Human in the loop by default** — `/subtopic-loop` requires explicit approval at the source-selection and structure-write gates; nothing is written to the wiki until you approve it.
 
 ---
 

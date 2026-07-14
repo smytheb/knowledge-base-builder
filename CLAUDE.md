@@ -2,10 +2,16 @@
 
 ## Topic
 
-<!-- EDIT THIS: Set your wiki's topic/domain -->
+<!-- EDIT THIS: Set your wiki's topic/domain. Or just run `/start` and let the agent interview you and fill it in. -->
+
 **Topic**: Example Topic
 **Description**: A comprehensive knowledge base about Example Topic.
-**Scope**: Define what is in-scope and out-of-scope for this wiki.
+**Scope**:
+- *In-scope:* What content belongs in this wiki.
+- *Out-of-scope:* Adjacent areas that don't belong.
+- *Audience:* Who reads this (e.g. "me, in 6 months", "my team", "the public").
+- *Depth:* Overview / working knowledge / deep technical.
+- *Success criteria:* When would you call this wiki "done enough to be useful"?
 
 ## Conventions
 
@@ -48,55 +54,56 @@ Every wiki page must include YAML frontmatter:
 ---
 title: Page Title
 type: concept | entity | summary | overview
+status: draft | published | needs-update | archived   # defaults to published; a wrong page is worse than no page
 sources:
   - "source identifier or filename"
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
+review-date: YYYY-MM-DD   # when to re-check for staleness; /lint flags pages past this date
 ---
 ```
 
 Use `[[wikilinks]]` for cross-references between pages. Prefer linking to existing pages over creating new ones when the concept is already covered.
 
+Set `review-date` a sensible interval out from `updated` (default ~12 months; shorter for fast-moving material). New pages start `status: published` unless the drafting agent flagged open questions it couldn't resolve, in which case `draft`.
+
 ### Operations
 
-All state-changing ops below append a line to `wiki/log.md` per Safety & Limits > Logging.
+Every operation that fetches, writes, or changes state appends a line to `wiki/log.md` (see Safety & Limits > Logging).
 
-**Ingest** — read the source, discuss key takeaways with the user, then create a summary page in `wiki/sources/` plus the relevant entity/concept pages, and update `wiki/index.md`. Bias toward extending existing pages over creating new ones.
+**Skill vs. prose rule.** Operations with a multi-step procedure, approval gates, or subagent orchestration are **Skills** — slash commands whose full procedure lives in `.claude/skills/<name>/SKILL.md` and loads only when invoked. Short, one-shot operations are described inline below and are triggered by asking for them by name; they are **not** slash commands.
 
-**Ingest from sources.md** — process unprocessed entries from `raw/sources.md`, deduping against `wiki/log.md`. Mark each `[x]` after success. Standard Ingest workflow per source.
+**Guided workflows (slash commands):**
 
-**Query** — search the wiki, answer with `[[wikilink]]` citations, flag gaps. If the answer is substantial and reusable, offer to save it as a new page.
+- **`/start`** — interview the user and write the Topic block. First-time setup.
+- **`/research-topic`** — orchestrate end-to-end wiki build-out: overview → master subtopic plan → iterate `/subtopic-loop` per subtopic. Subtopics run sequentially.
+- **`/subtopic-loop`** — per-subtopic research with two human approval gates (source approval, structure approval). Standalone runnable; also invoked by `/research-topic`. The two-gate invariant is enforced by the Hard rules below.
+- **`/ingest`** — ingest one approved source, or batch-process unprocessed entries in `raw/sources.md` (deduping against `wiki/log.md`, marking each `[x]` on success). Drafts pages, previews the structure, writes on approval. Biases toward extending existing pages over creating new ones.
+- **`/query`** — search the wiki and answer with `[[wikilink]]` citations; flag gaps; offer to save a substantial, reusable answer as a page.
+- **`/triangulate`** — verify specific claims against ≥2 independent sources; classify each and annotate the affected page(s).
+- **`/lint`** — health-check pages for contradictions, stale/overdue pages, orphans, broken `[[wikilinks]]`, and incomplete frontmatter; fix on user approval.
+
+**Prose operations (ask by name — not slash commands):**
 
 **Explore** — *research-only*: no full-content fetches, no wiki pages, no writes to `raw/sources.md` without explicit user approval. Use `WebSearch` (+ lightweight `WebFetch` only to verify a result). Aim for a diverse, on-scope mix; capture URL, title, type (docs/book/blog/video/spec/repo), one-line description, relevance. Dedup against `raw/sources.md` and `wiki/log.md`. Present the curated list, ask which (if any) to append to `raw/sources.md`, append only after explicit approval. After the session, offer **Outline** as a natural next step (skip if one already exists in `wiki/_outlines/` or the user signals done).
 
-**Lint** — scan wiki pages for contradictions, stale claims, orphan pages, missing cross-references, incomplete pages. Report with specific page references; fix on user approval.
-
 **Outline** — *planning-only*: no fetching, no wiki pages. Propose a target structure (candidate pages with type, key questions per page, cross-links), cross-check against `wiki/index.md` (annotate **new** / **extends-existing** / **already-covered**), present for approval. On approval, save as `wiki/_outlines/<topic-slug>.md` (excluded from index).
-
-**Triangulate** — extract the specific claims to verify (confirm with user if ambiguous). For each claim find ≥2 independent sources — two pages on the same site or one citing the other do **not** count as independent. Classify each as **confirmed** / **contested** / **single-source** / **unsupported**, then annotate the affected page(s): inline citations for confirmed, "Contested" note with both positions for contested, `> [!warning]` callout for single-source/unsupported.
 
 **Question-driven ingest** — for a research question (or set):
 1. **Interview first** unless the user said "just go". Ask up to 5 clarifying questions in one batched message, covering the same axes as `/start` (scope, depth, audience) plus *output shape* (one page / cluster / inline) and *acceptance* (what the user wants to look up afterward).
 2. Decompose into concrete sub-questions and get user approval of the list.
 3. Gather sources via Explore or existing `raw/sources.md` + wiki content.
-4. Ingest only sources that materially advance ≥1 sub-question. Tag each page with the sub-question(s) it answers.
+4. Ingest only sources that materially advance ≥1 sub-question (via the `/ingest` machinery). Tag each page with the sub-question(s) it answers.
 5. End with a **coverage report**: which page(s) answer each sub-question, plus unanswered sub-questions with suggested next sources.
-
-**Guided workflows** — slash commands whose full procedure lives in `.claude/skills/<name>/SKILL.md` and loads only when invoked:
-
-- **`/start`** — interview the user and write the Topic block. First-time setup.
-- **`/research-topic`** — orchestrate end-to-end wiki build-out: overview → master subtopic plan → iterate `/subtopic-loop` per subtopic. Sequential in v1.
-- **`/subtopic-loop`** — per-subtopic research with two human approval gates (source approval, structure approval). Standalone runnable; also invoked by `/research-topic`.
-
-The two-gate invariant for `/subtopic-loop` and the no-writes-between-gates rule are enforced via the Hard rules below.
 
 ### Writing Style
 
 - Write in clear, concise prose suitable for a reference wiki
 - Use headers (##, ###) to organize sections within pages
 - Include a "See also" section at the bottom of pages with relevant `[[wikilinks]]`
+- When a page has unresolved unknowns, add an **"Open Questions / Gaps"** section listing them — make missing knowledge explicit rather than papering over it
 - Attribute claims to sources using inline references like (Source: filename.md)
-- When sources conflict, note the contradiction explicitly and cite both sides
+- State claims at their true confidence; when sources conflict, surface the conflict explicitly and cite both sides rather than silently picking one
 
 ### Source Handling
 
@@ -136,20 +143,16 @@ The agent must stop and request explicit user approval before crossing one of th
 - **Creating more than 10 new wiki pages in a single operation** — pause and confirm; large dumps are usually a sign the operation should be split.
 - **Removing or renaming existing wiki pages** — confirm first and update inbound `[[wikilinks]]` in the same change.
 
-### Budgets (agent self-limits per operation)
+### Budgets (agent self-limits)
 
-The agent enforces these on itself. If a budget is hit mid-operation, stop, report progress, and ask the user whether to extend.
+Every flow is human-gated, so these are guardrails against wasted work, not safety controls. Two caps cover everything:
 
-- **Explore**: max 20 `WebSearch` + `WebFetch` calls combined
-- **Ingest** (single source): max 10 follow-on fetches for embedded/internal links
-- **Triangulate**: max 5 sources fetched per claim
-- **Question-driven ingest**: max 30 fetches across the whole run, max 8 new wiki pages created
-- **Outline**: 0 fetches (planning only)
-- **Bootstrap** (`/start`): 0 fetches (interview + CLAUDE.md edit only)
-- **Research-topic** (`/research-topic`): Phase A max 5 fetches and 1 wiki page (plus source-summary pages); Phase B 0 fetches; Phase C delegates to `/subtopic-loop` budgets per invocation. **Session ceiling** across all phases of one run: max 100 fetches total, max 30 new wiki pages total (runaway guard for unattended runs)
-- **Subtopic-loop** (`/subtopic-loop`): max 15 fetches combined across explorer + ingestor, max 5 sources ingested per invocation, max 5 new wiki pages per invocation (excluding source-summary pages)
+- **Fetches per operation**: ~15 combined `WebSearch` + `WebFetch` calls. If an operation would exceed this, stop, report progress, and ask whether to extend.
+- **New pages per operation**: pause and confirm before creating more than ~10 new wiki pages in one operation (this restates the soft rule above).
 
-The user may override any budget for a specific run with an explicit instruction (e.g., "go up to 50 fetches on this one"). Overrides do not persist.
+Planning-only operations (Outline) and `/start` do 0 fetches. `/research-topic` is a long orchestration: it applies the per-operation fetch cap within each phase (Phase A and each `/subtopic-loop` invocation) rather than a single session-wide budget — approval gates at every step are the real backstop. A skill may state a tighter default (e.g. a small overview-only allowance in Phase A); the caps here are the ceiling.
+
+The user may override either cap for a specific run with an explicit instruction (e.g., "go up to 50 fetches on this one"). Overrides do not persist and are noted in the log entry.
 
 ### Logging
 

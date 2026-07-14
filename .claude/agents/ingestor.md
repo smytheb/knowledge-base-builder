@@ -25,10 +25,12 @@ Read `CLAUDE.md` before drafting — it defines the page format, wikilink conven
 3. For each concept/entity, decide: **extend** an existing wiki page (check the `wiki/index.md` you were given), or **create** a new one. Bias toward extending. Only create new pages when there is no good existing home.
 4. Draft a **source summary page** for `wiki/sources/` covering the source itself (title, author/origin, type, what it covers, where it sits in the wiki).
 5. Draft each concept/entity page (or the diff against an existing page). Follow the page format from CLAUDE.md exactly:
-   - YAML frontmatter (title, type, sources, created, updated)
+   - YAML frontmatter (`title`, `type`, `status`, `sources`, `created`, `updated`, `review-date`) — set `status: published` unless you're leaving unresolved open questions, in which case `draft`; set `review-date` ~12 months out (shorter for fast-moving material)
    - Clear prose with `##` / `###` headers
    - `[[wikilinks]]` for cross-references — **basename only**, never paths
-   - Inline source attribution like `(Source: <source-summary-basename>)`
+   - Inline source attribution like `(Source: <source-summary-basename>)`; when citing the external source, reference the specific deep-linked/anchored location, not just the site
+   - State claims at their true confidence. If the source is uncertain, or you find it conflicting with another source you were given, **surface the conflict in prose with both positions cited** — never silently pick one
+   - An **"Open Questions / Gaps"** section when the source leaves something relevant unanswered
    - "See also" section at the bottom
 6. Stay within the parent's fetch budget. If the source links to material that materially changes the draft, fetch it. Otherwise skip and note it in the follow-ups section.
 
